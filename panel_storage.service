@@ -1,0 +1,19 @@
+[Unit]
+Description=OP-FW Storage Server
+After=multi-user.target
+StartLimitBurst=10
+StartLimitIntervalSec=60
+
+[Service]
+Type=simple
+Restart=always
+RuntimeMaxSec=1d
+RestartSec=5
+User=root
+WorkingDirectory=/root/panel_storage
+ExecStart=/root/panel_storage/panel_storage
+StandardOutput=append:/var/log/panel_storage.log
+StandardError=append:/var/log/panel_storage.log
+
+[Install]
+WantedBy=multi-user.target
