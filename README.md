@@ -1,4 +1,4 @@
-![banner](.github/banner.png)
+![banner](https://github.com/coalaura/admin-panel-socket/blob/master/.github/banner.png)
 
 ## Overview
 
