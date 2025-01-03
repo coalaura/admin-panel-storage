@@ -14,16 +14,18 @@ Copy the `example.config.json` to `config.json` in same directory the storage se
 ```json
 {
 	"root": "./storage",
-	"hostname": "127.0.0.1",
-	"port": 4994
+	"hostname": "0.0.0.0",
+	"port": 4994,
+	"allowed_ips": ["*"]
 }
 ```
 
-| Key        | Description                                         | Default     |
-| ---------- | --------------------------------------------------- | ----------- |
-| `root`     | The storage root, this is where all data is stored. | `./storage` |
-| `hostname` | The hostname to bind to.                            | `127.0.0.1` |
-| `port`     | The port to bind to.                                | `4994`      |
+| Key           | Description                                                                | Default     |
+| ------------- | -------------------------------------------------------------------------- | ----------- |
+| `root`        | The storage root, this is where all data is stored.                        | `./storage` |
+| `hostname`    | The hostname to bind to.                                                   | `0.0.0.0`   |
+| `port`        | The port to bind to.                                                       | `4994`      |
+| `allowed_ips` | A list of IP addresses that are allowed to connect. `*` will allow any IP. | `["*"]`     |
 
 ## Service
 You can use the `panel_storage.service` file to start the storage server as a systemd service. Adjust the paths to match your environment.

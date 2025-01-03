@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"net"
 	"os"
 )
 
 type Config struct {
-	Root     string `json:"root"`
-	Hostname string `json:"hostname"`
-	Port     int    `json:"port"`
+	Root       string   `json:"root"`
+	Hostname   string   `json:"hostname"`
+	Port       int      `json:"port"`
+	AllowedIPs []string `json:"allowed_ips"`
 }
 
 const ConfigFile = "config.json"
@@ -64,8 +66,34 @@ func (c *Config) SetDefaults() {
 		c.Port = 4994
 	}
 
-	// Default hostname is 127.0.0.1
+	// Default hostname is 0.0.0.0
 	if c.Hostname == "" {
-		c.Hostname = "127.0.0.1"
+		c.Hostname = "0.0.0.0"
 	}
+
+	// Default allowed_ips is ["*"]
+	if len(c.AllowedIPs) == 0 {
+		c.AllowedIPs = []string{"*"}
+	}
+}
+
+func (c *Config) IsIPAllowed(ip string) bool {
+	if len(c.AllowedIPs) == 0 || c.AllowedIPs[0] == "*" {
+		return true
+	}
+
+	address, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		log.Warningf("Failed to parse IP address: %s\n", err)
+
+		return false
+	}
+
+	for _, allowed := range c.AllowedIPs {
+		if allowed == "*" || allowed == address {
+			return true
+		}
+	}
+
+	return false
 }

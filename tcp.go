@@ -31,11 +31,21 @@ func StartTCPServer() error {
 			continue
 		}
 
+		ip := connection.RemoteAddr().String()
+
+		if !config.IsIPAllowed(ip) {
+			connection.Close()
+
+			log.Warningf("Rejected connection from %s\n", ip)
+
+			continue
+		}
+
 		secure, err := NewSecureConnection(connection)
 		if err != nil {
 			connection.Close()
 
-			log.Warningf("Failed to create secure connection: %s\n", err)
+			log.Warningf("Failed to create secure connection with %s: %s\n", ip, err)
 
 			continue
 		}
