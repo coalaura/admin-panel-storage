@@ -24,3 +24,6 @@ Copy the `example.config.json` to `config.json` in same directory the storage se
 | `root`     | The storage root, this is where all data is stored. | `./storage` |
 | `hostname` | The hostname to bind to.                            | `127.0.0.1` |
 | `port`     | The port to bind to.                                | `4994`      |
+
+## Service
+You can use the `panel_storage.service` file to start the storage server as a systemd service. Adjust the paths to match your environment.
