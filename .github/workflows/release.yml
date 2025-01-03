@@ -34,8 +34,8 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: panel_storage_${{ github.ref_name }}_${{ matrix.goarch }}
-          path: ./build/panel_storage_${{ github.ref_name }}_${{ matrix.goarch }}*
+          name: panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
+          path: ./build/panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}*
 
   release:
     needs: build
