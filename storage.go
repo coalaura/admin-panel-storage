@@ -139,8 +139,6 @@ func (h *RequestHeader) Store(license, path string, reader *bytes.Reader) ([]byt
 		return nil, err
 	}
 
-	log.Debugf("Received store request for %s (%d)\n", license, h.Start)
-
 	FileMx.Lock(path)
 	defer FileMx.Unlock(path)
 
