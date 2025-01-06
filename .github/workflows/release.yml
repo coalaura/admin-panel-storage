@@ -15,7 +15,6 @@ jobs:
     strategy:
       matrix:
         goos: [windows, linux]
-        goarch: [amd64, arm64]
 
     steps:
       - name: Checkout code
@@ -26,16 +25,16 @@ jobs:
         with:
           go-version: '1.23.4'
 
-      - name: Build for ${{ matrix.goos }}_${{ matrix.goarch }}
+      - name: Build for ${{ matrix.goos }}_amd64
         run: |
           if [ "${{ matrix.goos }}" = "windows" ]; then EXT=".exe"; else EXT=""; fi
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -ldflags="-s -w" -trimpath -o build/panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}$EXT
+          GOOS=${{ matrix.goos }} GOARCH=amd64 go build -ldflags="-s -w" -trimpath -o build/panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_amd64$EXT
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: ./build/panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_${{ matrix.goarch }}*
+          name: panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_amd64
+          path: ./build/panel_storage_${{ github.ref_name }}_${{ matrix.goos }}_amd64*
 
   release:
     needs: build
