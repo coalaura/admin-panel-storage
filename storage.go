@@ -34,6 +34,8 @@ const (
 	MinTimestamp = 946684800 // 2000-01-01
 )
 
+var FileMx FileMutex
+
 func NewStorage(root string) (*Storage, error) {
 	abs, err := filepath.Abs(root)
 	if err != nil {
@@ -138,6 +140,9 @@ func (h *RequestHeader) Store(license, path string, reader *bytes.Reader) ([]byt
 	}
 
 	log.Debugf("Received store request for %s (%d)\n", license, h.Start)
+
+	FileMx.Lock(path)
+	defer FileMx.Unlock(path)
 
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {

@@ -76,6 +76,9 @@ func ReadHistoryFileSection(writer *bytes.Buffer, path string, start uint32, end
 		return nil
 	}
 
+	FileMx.Lock(path)
+	defer FileMx.Unlock(path)
+
 	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		return err
