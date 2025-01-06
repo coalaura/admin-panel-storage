@@ -24,7 +24,7 @@ func ReadAllHistoricFiles(writer *bytes.Buffer, path string, timestamp uint32) e
 	for _, file := range files {
 		var buffer bytes.Buffer
 
-		err = ReadHistoryFileSection(&buffer, filepath.Join(path, file.Name()), timestamp, timestamp)
+		err = ReadHistoryFileSection(&buffer, filepath.Join(path, file.Name()), timestamp-1, timestamp+1, true)
 		if err != nil {
 			return err
 		}
@@ -59,19 +59,19 @@ func ReadAllHistoricFiles(writer *bytes.Buffer, path string, timestamp uint32) e
 }
 
 func ReadHistoricFiles(writer *bytes.Buffer, path1, path2 string, start uint32, end uint32) error {
-	err := ReadHistoryFileSection(writer, path1, start, end)
+	err := ReadHistoryFileSection(writer, path1, start, end, false)
 	if err != nil {
 		return err
 	}
 
 	if path1 != path2 {
-		return ReadHistoryFileSection(writer, path2, start, end)
+		return ReadHistoryFileSection(writer, path2, start, end, false)
 	}
 
 	return nil
 }
 
-func ReadHistoryFileSection(writer *bytes.Buffer, path string, start uint32, end uint32) error {
+func ReadHistoryFileSection(writer *bytes.Buffer, path string, start uint32, end uint32, single bool) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
@@ -113,7 +113,7 @@ func ReadHistoryFileSection(writer *bytes.Buffer, path string, start uint32, end
 		writer.Write(entry)
 
 		// If we have reached the end of the section, stop
-		if timestamp >= end {
+		if timestamp >= end || single {
 			break
 		}
 	}
