@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 )
 
 type SecureConnection struct {
+	mx sync.Mutex
+
 	key        *SessionKey
 	connection net.Conn
 
@@ -28,10 +31,23 @@ func NewSecureConnection(connection net.Conn) (*SecureConnection, error) {
 
 	connection.SetReadDeadline(time.Now().Add(5 * time.Second))
 
-	// Read their public key first
-	var length uint32
+	// Request ID is always 0
+	var (
+		requestId uint32
+		length    uint32
+	)
 
-	err := binary.Read(connection, binary.LittleEndian, &length)
+	err := binary.Read(connection, binary.LittleEndian, &requestId)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read request ID: %s", err)
+	}
+
+	if requestId != 0 {
+		return nil, fmt.Errorf("Invalid request ID for handshake: %d", requestId)
+	}
+
+	// Read their public key first
+	err = binary.Read(connection, binary.LittleEndian, &length)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to read public key length: %s", err)
 	}
@@ -61,7 +77,7 @@ func NewSecureConnection(connection net.Conn) (*SecureConnection, error) {
 		return nil, fmt.Errorf("Failed to encrypt session key: %s", err)
 	}
 
-	_, err = connection.Write(secure.CreatePacket(data))
+	_, err = connection.Write(data)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to write session key: %s", err)
 	}
@@ -75,41 +91,58 @@ func (s *SecureConnection) Close() {
 	log.Debugf("Closed connection from %s\n", s.IP)
 }
 
-func (s *SecureConnection) CreatePacket(data []byte) []byte {
-	packet := make([]byte, len(data)+4)
+func (s *SecureConnection) CreatePacket(requestId uint32, data []byte) []byte {
+	packet := make([]byte, len(data)+4+4)
 
-	binary.LittleEndian.PutUint32(packet, uint32(len(data)))
+	// Write the request id
+	binary.LittleEndian.PutUint32(packet[0:4], requestId)
 
-	copy(packet[4:], data)
+	// Write the data length
+	binary.LittleEndian.PutUint32(packet[4:8], uint32(len(data)))
+
+	// Write the data
+	copy(packet[8:], data)
 
 	return packet
 }
 
-func (s *SecureConnection) Send(data []byte) error {
+func (s *SecureConnection) Send(requestId uint32, data []byte) error {
 	encrypted, err := s.key.Encrypt(data)
 	if err != nil {
 		return err
 	}
 
-	_, err = s.connection.Write(s.CreatePacket(encrypted))
+	s.mx.Lock()
+	defer s.mx.Unlock()
+
+	_, err = s.connection.Write(s.CreatePacket(requestId, encrypted))
 
 	return err
 }
 
-func (s *SecureConnection) WaitForData() ([]byte, error) {
+func (s *SecureConnection) WaitForData() (uint32, []byte, error) {
 	s.connection.SetReadDeadline(time.Now().Add(10 * time.Minute))
 
-	// First read the length of the data
-	var length uint32
+	var (
+		requestId uint32
+		length    uint32
+	)
 
-	err := binary.Read(s.connection, binary.LittleEndian, &length)
+	// First read the request id
+	err := binary.Read(s.connection, binary.LittleEndian, &requestId)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
+	}
+
+	// Then read the length
+	err = binary.Read(s.connection, binary.LittleEndian, &length)
+	if err != nil {
+		return 0, nil, err
 	}
 
 	// Check that the packet is not too large
 	if length > MaxPacketSize {
-		return nil, fmt.Errorf("packet too large")
+		return 0, nil, fmt.Errorf("packet too large")
 	}
 
 	// Then read the data
@@ -117,16 +150,21 @@ func (s *SecureConnection) WaitForData() ([]byte, error) {
 
 	_, err = io.ReadFull(s.connection, buf)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	return s.key.Decrypt(buf)
+	data, err := s.key.Decrypt(buf)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return requestId, data, nil
 }
 
-func (s *SecureConnection) Acknowledge() {
-	s.Send([]byte("ACK"))
+func (s *SecureConnection) Acknowledge(requestId uint32) {
+	s.Send(requestId, []byte("ACK"))
 }
 
-func (s *SecureConnection) Error() {
-	s.Send([]byte("ERR"))
+func (s *SecureConnection) Error(requestId uint32) {
+	s.Send(requestId, []byte("ERR"))
 }

@@ -58,7 +58,7 @@ func HandleConnection(secure *SecureConnection) {
 	defer secure.Close()
 
 	for {
-		data, err := secure.WaitForData()
+		requestId, data, err := secure.WaitForData()
 		if err != nil {
 			if err == io.EOF {
 				return
@@ -73,15 +73,15 @@ func HandleConnection(secure *SecureConnection) {
 		if err != nil {
 			log.Warningf("Failed to handle request from %s: %s\n", secure.IP, err)
 
-			secure.Error()
+			secure.Error(requestId)
 
 			continue
 		}
 
 		if response == nil {
-			secure.Acknowledge()
+			secure.Acknowledge(requestId)
 		} else {
-			secure.Send(response)
+			secure.Send(requestId, response)
 		}
 	}
 }
