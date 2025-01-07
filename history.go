@@ -24,7 +24,7 @@ func ReadAllHistoricFiles(writer *bytes.Buffer, path string, timestamp uint32) e
 	for _, file := range files {
 		var buffer bytes.Buffer
 
-		err = ReadHistoryFileSection(&buffer, filepath.Join(path, file.Name()), timestamp-1, timestamp+1, true)
+		err = ReadHistoryFileSection(&buffer, filepath.Join(path, file.Name()), timestamp-2, timestamp+2, true)
 		if err != nil {
 			return err
 		}
