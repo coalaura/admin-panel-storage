@@ -162,7 +162,7 @@ func (h *RequestHeader) ReadOne(license, path1, path2 string) ([]byte, error) {
 		return nil, fmt.Errorf("read-one requires license")
 	}
 
-	log.Debugf("Received read request for %s (%d - %d)\n", license, h.Start, h.End)
+	log.Notef("Received read-one request for %s (%d - %d)\n", license, h.Start, h.End)
 
 	var (
 		total  = int(h.End-h.Start) * HistoricEntrySize
@@ -174,6 +174,8 @@ func (h *RequestHeader) ReadOne(license, path1, path2 string) ([]byte, error) {
 		return nil, err
 	}
 
+	log.Notef("Found %d bytes for read-one\n", buffer.Len())
+
 	return buffer.Bytes(), nil
 }
 
@@ -182,7 +184,7 @@ func (h *RequestHeader) ReadAll(license, path1, path2 string) ([]byte, error) {
 		return nil, fmt.Errorf("read-all requires no license")
 	}
 
-	log.Debugf("Received read-all request for c%d (%d - %d)\n", h.Server, h.Start, h.End)
+	log.Notef("Received read-all request for c%d (%d - %d)\n", h.Server, h.Start, h.End)
 
 	var buffer bytes.Buffer
 
@@ -190,6 +192,8 @@ func (h *RequestHeader) ReadAll(license, path1, path2 string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	log.Notef("Found %d bytes for read-all\n", buffer.Len())
 
 	return buffer.Bytes(), nil
 }

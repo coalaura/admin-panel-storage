@@ -27,7 +27,7 @@ func NewSecureConnection(connection net.Conn) (*SecureConnection, error) {
 		IP: connection.RemoteAddr().String(),
 	}
 
-	log.Debugf("Accepted connection from %s\n", secure.IP)
+	log.Notef("Accepted connection from %s\n", secure.IP)
 
 	connection.SetReadDeadline(time.Now().Add(5 * time.Second))
 
@@ -88,7 +88,7 @@ func NewSecureConnection(connection net.Conn) (*SecureConnection, error) {
 func (s *SecureConnection) Close() {
 	s.connection.Close()
 
-	log.Debugf("Closed connection from %s\n", s.IP)
+	log.Notef("Closed connection from %s\n", s.IP)
 }
 
 func (s *SecureConnection) CreatePacket(requestId uint32, data []byte) []byte {
